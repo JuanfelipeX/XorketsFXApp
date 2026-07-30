@@ -1,6 +1,9 @@
 const express = require("express");
 
-const { connect } = require("./websocket");
+const {
+    connect,
+    getStatus
+} = require("./websocket");
 
 const {
     getPrice,
@@ -18,6 +21,20 @@ app.get("/", (req, res) => {
     res.json({
         status: "ok",
         service: "Market Feed API"
+    });
+
+});
+
+app.get("/status", (req, res) => {
+
+    res.json({
+
+        websocket: getStatus(),
+
+        symbols: Object.keys(getAllPrices()).length,
+
+        prices: getAllPrices()
+
     });
 
 });
