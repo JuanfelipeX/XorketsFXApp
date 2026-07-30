@@ -12,42 +12,43 @@ let lastStatus = null;
 
 function connect() {
 
-    console.log("Conectando a Xorkets...");
+    console.log("Conectando a:", WS_URL);
 
     socket = new WebSocket(WS_URL, {
-        headers: {
-            Origin: "https://app.xorketsfx.com",
-            "User-Agent": "Mozilla/5.0"
-        }
+        perMessageDeflate: false,
+        handshakeTimeout: 15000
     });
 
     socket.on("open", () => {
 
         connected = true;
         lastError = null;
+        lastStatus = 101;
 
         console.log("✅ WebSocket conectado");
 
     });
 
-    socket.on("message", (message) => {
+    socket.on("message", (data) => {
 
         try {
 
-            const json = JSON.parse(message);
+            const json = JSON.parse(data.toString());
 
-            if (!json.data)
+            if (!json.data || !Array.isArray(json.data))
                 return;
 
             json.data.forEach(asset => {
 
-                updatePrice(asset.symbol, asset);
+                if (asset.symbol) {
+                    updatePrice(asset.symbol, asset);
+                }
 
             });
 
         } catch (err) {
 
-            console.error("JSON ERROR:", err);
+            console.error("JSON ERROR:", err.message);
 
         }
 
@@ -56,38 +57,41 @@ function connect() {
     socket.on("unexpected-response", (req, res) => {
 
         connected = false;
-
         lastStatus = res.statusCode;
 
-        console.log("STATUS:", res.statusCode);
-
-        console.log("HEADERS:", res.headers);
+        console.log("HTTP STATUS:", res.statusCode);
 
     });
 
-    socket.on("close", () => {
+    socket.on("close", (code, reason) => {
 
         connected = false;
 
-        console.log("WebSocket desconectado");
+        console.log("CLOSE:", code, reason.toString());
 
         setTimeout(connect, 5000);
 
     });
 
-    socket.on("error", err => {
+    socket.on("error", (err) => {
+
         connected = false;
         lastError = err.message;
-        console.error("WS ERROR:", err.message);
+
+        console.log("ERROR:", err.message);
+
     });
+
 }
 
 function getStatus() {
+
     return {
         connected,
         lastError,
         lastStatus
     };
+
 }
 
 module.exports = {
