@@ -1,5 +1,5 @@
-//Este archivo será el encargado de guardar el último precio de cada símbolo.
 // prices.js
+// Guarda el último precio de cada símbolo en memoria.
 
 const prices = {};
 
@@ -14,7 +14,7 @@ function updatePrice(symbol, data) {
     };
 }
 
-/**ñ
+/**
  * Obtiene el precio de un símbolo.
  */
 function getPrice(symbol) {
