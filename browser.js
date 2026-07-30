@@ -29,8 +29,16 @@ async function startBrowser() {
 
         context = await browser.newContext({
             userAgent:
-                "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 " +
-                "(KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36"
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            viewport: { width: 1366, height: 768 },
+            locale: "es-ES"
+        });
+
+        // Oculta las señales más obvias de automatización antes de que
+        // cualquier script de la página se ejecute.
+        await context.addInitScript(() => {
+            Object.defineProperty(navigator, "webdriver", { get: () => undefined });
         });
 
         page = await context.newPage();
@@ -70,6 +78,17 @@ async function startBrowser() {
             waitUntil: "domcontentloaded",
             timeout: 60000
         });
+
+        // Le damos tiempo a cualquier challenge anti-bot (Cloudflare, etc.)
+        // de resolverse antes de que la página intente abrir su WebSocket.
+        await page.waitForTimeout(6000);
+
+        try {
+            await page.screenshot({ path: "debug_screenshot.png" });
+            console.log("Screenshot de diagnóstico guardado en debug_screenshot.png");
+        } catch (e) {
+            console.log("No se pudo tomar screenshot:", e.message);
+        }
 
         console.log("Página cargada, esperando datos del WebSocket...");
     } catch (err) {
