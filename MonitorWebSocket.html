@@ -18,17 +18,13 @@
       --red: #ff5c5c;
       --red-dim: #3a1414;
       --amber: #ffb020;
-      --amber-dim: #3a2c0c;
       --mono: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
       --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
@@ -42,7 +38,6 @@
       min-height: 100vh;
     }
 
-    /* ---------- TICKER ---------- */
     .ticker-wrap {
       background: #000;
       border-bottom: 1px solid var(--panel-border);
@@ -61,35 +56,16 @@
       padding-left: 100%;
     }
 
-    .ticker span {
-      margin-right: 28px;
-      color: var(--muted);
-    }
-
-    .ticker span b {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    .ticker .up {
-      color: var(--green);
-    }
-
-    .ticker .down {
-      color: var(--red);
-    }
+    .ticker span { margin-right: 28px; color: var(--muted); }
+    .ticker span b { color: var(--text); font-weight: 500; }
+    .ticker .up { color: var(--green); }
+    .ticker .down { color: var(--red); }
 
     @keyframes scroll {
-      from {
-        transform: translateX(0);
-      }
-
-      to {
-        transform: translateX(-100%);
-      }
+      from { transform: translateX(0); }
+      to { transform: translateX(-100%); }
     }
 
-    /* ---------- LAYOUT ---------- */
     .wrap {
       max-width: 880px;
       width: 100%;
@@ -116,12 +92,7 @@
       margin: 0 0 6px;
     }
 
-    h1 {
-      font-size: 26px;
-      font-weight: 650;
-      margin: 0;
-      letter-spacing: -0.01em;
-    }
+    h1 { font-size: 26px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
 
     .beacon {
       display: flex;
@@ -137,48 +108,22 @@
     }
 
     .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--dim);
-      position: relative;
-      flex-shrink: 0;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--dim); position: relative; flex-shrink: 0;
     }
-
-    .dot.live {
-      background: var(--green);
-    }
-
+    .dot.live { background: var(--green); }
     .dot.live::after {
-      content: "";
-      position: absolute;
-      inset: -5px;
-      border-radius: 50%;
-      border: 1px solid var(--green);
-      animation: pulse 1.8s ease-out infinite;
+      content: ""; position: absolute; inset: -5px; border-radius: 50%;
+      border: 1px solid var(--green); animation: pulse 1.8s ease-out infinite;
     }
-
-    .dot.down {
-      background: var(--red);
-    }
-
-    .dot.pending {
-      background: var(--amber);
-    }
+    .dot.down { background: var(--red); }
+    .dot.pending { background: var(--amber); }
 
     @keyframes pulse {
-      0% {
-        transform: scale(0.6);
-        opacity: 0.9;
-      }
-
-      100% {
-        transform: scale(1.9);
-        opacity: 0;
-      }
+      0% { transform: scale(0.6); opacity: 0.9; }
+      100% { transform: scale(1.9); opacity: 0; }
     }
 
-    /* ---------- STAT CARDS ---------- */
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -190,38 +135,77 @@
       margin-bottom: 20px;
     }
 
-    .stat {
-      background: var(--panel);
-      padding: 16px 18px;
-    }
-
+    .stat { background: var(--panel); padding: 16px 18px; }
     .stat .label {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 0 0 8px;
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin: 0 0 8px;
+    }
+    .stat .value { font-family: var(--mono); font-size: 19px; font-weight: 500; margin: 0; }
+    .stat .value.small { font-size: 14px; color: var(--muted); }
+
+    .search-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
     }
 
-    .stat .value {
-      font-family: var(--mono);
-      font-size: 19px;
-      font-weight: 500;
-      margin: 0;
+    .search-panel .label {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); margin: 0 0 10px;
     }
 
-    .stat .value.small {
+    .search-row { display: flex; gap: 8px; }
+
+    .search-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--mono);
       font-size: 14px;
-      color: var(--muted);
+      padding: 10px 12px;
+      text-transform: lowercase;
     }
 
-    /* ---------- ACTIONS ---------- */
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
+    .search-row input:focus { outline: none; border-color: var(--green); }
+
+    .search-row button {
+      background: var(--panel-border);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 560;
+      border-radius: 8px;
+      padding: 0 16px;
+      border: none;
+      cursor: pointer;
     }
+
+    .search-row button:hover { background: var(--dim); }
+
+    #searchResult { margin-top: 14px; display: none; }
+    #searchResult.show { display: block; }
+
+    .sr-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+    .sr-symbol { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+    .sr-change { font-family: var(--mono); font-size: 13px; padding: 2px 8px; border-radius: 100px; }
+    .sr-change.up { color: var(--green); background: var(--green-dim); }
+    .sr-change.down { color: var(--red); background: var(--red-dim); }
+
+    .sr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .sr-item .k {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); margin: 0 0 4px;
+    }
+    .sr-item .v { font-family: var(--mono); font-size: 15px; }
+
+    .sr-updated { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+    .sr-notfound { font-family: var(--mono); font-size: 13px; color: var(--amber); }
+
+    .actions { display: flex; gap: 10px; margin-bottom: 24px; }
 
     button {
       font-family: var(--sans);
@@ -234,36 +218,15 @@
       transition: transform 0.06s ease, opacity 0.15s ease;
     }
 
-    button:active {
-      transform: scale(0.98);
-    }
+    button:active { transform: scale(0.98); }
 
-    .btn-primary {
-      background: var(--green);
-      color: #04180d;
-    }
+    .btn-primary { background: var(--green); color: #04180d; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; }
 
-    .btn-primary:hover {
-      opacity: 0.88;
-    }
+    .btn-ghost { background: transparent; border-color: var(--panel-border); color: var(--text); }
+    .btn-ghost:hover { border-color: var(--muted); }
 
-    .btn-primary:disabled {
-      background: var(--dim);
-      color: var(--muted);
-      cursor: not-allowed;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border-color: var(--panel-border);
-      color: var(--text);
-    }
-
-    .btn-ghost:hover {
-      border-color: var(--muted);
-    }
-
-    /* ---------- LOG ---------- */
     .log-panel {
       background: var(--panel);
       border: 1px solid var(--panel-border);
@@ -272,91 +235,41 @@
     }
 
     .log-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--panel-border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; border-bottom: 1px solid var(--panel-border);
     }
 
     .log-head span {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
     }
 
     #log {
-      font-family: var(--mono);
-      font-size: 12px;
-      line-height: 1.6;
-      max-height: 320px;
-      overflow-y: auto;
-      padding: 4px 0;
+      font-family: var(--mono); font-size: 12px; line-height: 1.6;
+      max-height: 320px; overflow-y: auto; padding: 4px 0;
     }
 
-    .row {
-      display: flex;
-      gap: 10px;
-      padding: 6px 16px;
-      border-bottom: 1px solid #14181d;
-    }
-
-    .row:last-child {
-      border-bottom: none;
-    }
-
-    .row .t {
-      color: var(--dim);
-      flex-shrink: 0;
-    }
-
-    .row .m {
-      color: var(--muted);
-      word-break: break-word;
-    }
-
-    .row.ok .m {
-      color: var(--text);
-    }
-
-    .row.ok .tag {
-      color: var(--green);
-    }
-
-    .row.err .m {
-      color: #ff9d9d;
-    }
-
-    .row.err .tag {
-      color: var(--red);
-    }
-
-    .row.warn .tag {
-      color: var(--amber);
-    }
-
-    .tag {
-      flex-shrink: 0;
-      font-weight: 600;
-    }
+    .row { display: flex; gap: 10px; padding: 6px 16px; border-bottom: 1px solid #14181d; }
+    .row:last-child { border-bottom: none; }
+    .row .t { color: var(--dim); flex-shrink: 0; }
+    .row .m { color: var(--muted); word-break: break-word; }
+    .row.ok .m { color: var(--text); }
+    .row.ok .tag { color: var(--green); }
+    .row.err .m { color: #ff9d9d; }
+    .row.err .tag { color: var(--red); }
+    .row.warn .tag { color: var(--amber); }
+    .tag { flex-shrink: 0; font-weight: 600; }
 
     footer {
-      margin-top: 20px;
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--dim);
-      text-align: center;
+      margin-top: 20px; font-family: var(--mono); font-size: 11px;
+      color: var(--dim); text-align: center;
     }
 
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 8px; }
 
-    ::-webkit-scrollbar-thumb {
-      background: var(--panel-border);
-      border-radius: 8px;
+    @media (max-width: 560px) {
+      .sr-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -401,6 +314,28 @@
       </div>
     </div>
 
+    <div class="search-panel">
+      <p class="label">Buscar símbolo</p>
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="ej: us30, eurusd, nas100..." autocomplete="off">
+        <button id="btnBuscar">Buscar</button>
+      </div>
+
+      <div id="searchResult">
+        <div class="sr-head">
+          <span class="sr-symbol" id="srSymbol">—</span>
+          <span class="sr-change" id="srChange">—</span>
+        </div>
+        <div class="sr-grid">
+          <div class="sr-item"><p class="k">Close</p><p class="v" id="srClose">—</p></div>
+          <div class="sr-item"><p class="k">High</p><p class="v" id="srHigh">—</p></div>
+          <div class="sr-item"><p class="k">Low</p><p class="v" id="srLow">—</p></div>
+          <div class="sr-item"><p class="k">Open</p><p class="v" id="srOpen">—</p></div>
+        </div>
+        <p class="sr-updated" id="srUpdated"></p>
+      </div>
+    </div>
+
     <div class="actions">
       <button class="btn-primary" id="btnEnviar">Enviar ahora</button>
       <button class="btn-ghost" id="btnLimpiar">Limpiar log</button>
@@ -431,6 +366,7 @@
     let totalEnvios = 0;
     let countdownRestante = INTERVALO_ENVIO_MS / 1000;
     let logEventos = 0;
+    let simboloActivo = null;
 
     const $ = (id) => document.getElementById(id);
 
@@ -470,10 +406,56 @@
           p.close + ' <span class="' + dir + '">' + flecha + ' ' + p.changeRatio + '%</span></span>';
       }).join("");
 
-      $("ticker").innerHTML = html + html; // duplicado para loop continuo
+      $("ticker").innerHTML = html + html;
     }
 
-    // ---------------- WebSocket ----------------
+    function mostrarResultado(simbolo) {
+      const p = precios[simbolo];
+      const box = $("searchResult");
+
+      if (!p) {
+        box.classList.add("show");
+        box.innerHTML = '<p class="sr-notfound">No se encontro "' + simbolo + '" (todavia) entre los simbolos recibidos.</p>';
+        return;
+      }
+
+      if (!$("srSymbol")) {
+        box.innerHTML =
+          '<div class="sr-head"><span class="sr-symbol" id="srSymbol">—</span>' +
+          '<span class="sr-change" id="srChange">—</span></div>' +
+          '<div class="sr-grid">' +
+          '<div class="sr-item"><p class="k">Close</p><p class="v" id="srClose">—</p></div>' +
+          '<div class="sr-item"><p class="k">High</p><p class="v" id="srHigh">—</p></div>' +
+          '<div class="sr-item"><p class="k">Low</p><p class="v" id="srLow">—</p></div>' +
+          '<div class="sr-item"><p class="k">Open</p><p class="v" id="srOpen">—</p></div>' +
+          '</div><p class="sr-updated" id="srUpdated"></p>';
+      }
+
+      const dir = (p.changeRatio ?? 0) >= 0 ? "up" : "down";
+
+      box.classList.add("show");
+      $("srSymbol").textContent = p.symbol.toUpperCase();
+      $("srChange").textContent = (dir === "up" ? "▲ +" : "▼ ") + p.changeRatio + "%";
+      $("srChange").className = "sr-change " + dir;
+      $("srClose").textContent = p.close;
+      $("srHigh").textContent = p.high;
+      $("srLow").textContent = p.low;
+      $("srOpen").textContent = p.open ?? "—";
+      $("srUpdated").textContent = "Actualizado: " + new Date(p.updatedAt).toLocaleTimeString();
+    }
+
+    function buscarSimbolo() {
+      const valor = $("searchInput").value.trim().toLowerCase();
+      if (!valor) return;
+      simboloActivo = valor;
+      mostrarResultado(valor);
+    }
+
+    $("btnBuscar").addEventListener("click", buscarSimbolo);
+    $("searchInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") buscarSimbolo();
+    });
+
     function conectarWS() {
       ws = new WebSocket(WS_URL);
 
@@ -495,6 +477,8 @@
 
           $("statSimbolos").textContent = Object.keys(precios).length;
           actualizarTicker();
+
+          if (simboloActivo) mostrarResultado(simboloActivo);
         } catch (err) {
           agregarLog("err", "No se pudo leer un mensaje: " + err.message);
         }
@@ -512,7 +496,6 @@
       };
     }
 
-    // ---------------- Envío a Apps Script ----------------
     async function enviarAAppsScript(manual) {
       if (Object.keys(precios).length === 0) {
         agregarLog("warn", "Sin datos todavía, no se envía");
@@ -542,7 +525,6 @@
       }
     }
 
-    // ---------------- Contador regresivo ----------------
     setInterval(() => {
       countdownRestante--;
       if (countdownRestante <= 0) {
