@@ -1,10 +1,7 @@
-//Este archivo se encargará únicamente de conectarse al WebSocket.
 const WebSocket = require("ws");
 const { updatePrice } = require("./prices");
 
 const WS_URL = "wss://app.xorketsfx.com/api/websocket/1/all";
-
-let socket = null;
 
 let connected = false;
 let lastError = null;
@@ -14,9 +11,9 @@ function connect() {
 
     console.log("Conectando a:", WS_URL);
 
-    socket = new WebSocket(WS_URL, {
-        perMessageDeflate: false,
-        handshakeTimeout: 15000
+    const socket = new WebSocket(WS_URL, {
+        handshakeTimeout: 15000,
+        perMessageDeflate: false
     });
 
     socket.on("open", () => {
@@ -25,30 +22,28 @@ function connect() {
         lastError = null;
         lastStatus = 101;
 
-        console.log("✅ WebSocket conectado");
+        console.log("✅ CONECTADO");
 
     });
 
-    socket.on("message", (data) => {
+    socket.on("message", data => {
 
         try {
 
             const json = JSON.parse(data.toString());
 
-            if (!json.data || !Array.isArray(json.data))
+            if (!json.data)
                 return;
 
             json.data.forEach(asset => {
 
-                if (asset.symbol) {
-                    updatePrice(asset.symbol, asset);
-                }
+                updatePrice(asset.symbol, asset);
 
             });
 
-        } catch (err) {
+        } catch (e) {
 
-            console.error("JSON ERROR:", err.message);
+            console.log("JSON ERROR:", e.message);
 
         }
 
@@ -60,6 +55,32 @@ function connect() {
         lastStatus = res.statusCode;
 
         console.log("HTTP STATUS:", res.statusCode);
+
+        console.log("HEADERS:");
+
+        console.log(res.headers);
+
+        let body = "";
+
+        res.on("data", chunk => body += chunk);
+
+        res.on("end", () => {
+
+            console.log("BODY:");
+
+            console.log(body);
+
+        });
+
+    });
+
+    socket.on("error", err => {
+
+        connected = false;
+
+        lastError = err.message;
+
+        console.log("ERROR:", err.message);
 
     });
 
@@ -73,28 +94,26 @@ function connect() {
 
     });
 
-    socket.on("error", (err) => {
-
-        connected = false;
-        lastError = err.message;
-
-        console.log("ERROR:", err.message);
-
-    });
-
 }
 
 function getStatus() {
 
     return {
+
         connected,
+
         lastError,
+
         lastStatus
+
     };
 
 }
 
 module.exports = {
+
     connect,
+
     getStatus
+
 };
