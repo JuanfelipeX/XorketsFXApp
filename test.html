@@ -1,29 +1,92 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="utf-8">
+    <title>Puente Xorkets → Apps Script</title>
+</head>
 <body>
 
-<h2>Prueba Xorkets</h2>
+<h2>Puente Xorkets — no cierres esta pestaña</h2>
+<p id="estado">Conectando al WebSocket...</p>
+<p id="ultimo">Último envío: nunca</p>
+<p id="simbolos">Símbolos acumulados: 0</p>
 
 <script>
+// ==================== CONFIGURA ESTO ====================
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjQ_4rbtCnAWdvu01hDk4EvCXMfrD0se5cIBUHY5Kbxmg_0AQ_fFi9rTBn9DrWxLCo/exec";
+const SECRETO = "XorketsFXClave"; // el mismo que pusiste en el .gs
+const INTERVALO_ENVIO_MS = 15000; // cada cuánto envía (15s)
+// ==========================================================
 
-const ws = new WebSocket("wss://app.xorketsfx.com/api/websocket/1/all");
+const WS_URL = "wss://app.xorketsfx.com/api/websocket/1/all";
 
-ws.onopen = () => {
-    console.log("✅ conectado");
-};
+let precios = {};
+let ws = null;
 
-ws.onmessage = e => {
-    console.log(e.data);
-};
+function conectarWS() {
+    ws = new WebSocket(WS_URL);
 
-ws.onerror = e => {
-    console.log("ERROR", e);
-};
+    ws.onopen = () => {
+        document.getElementById("estado").textContent = "✅ Conectado a Xorkets";
+    };
 
-ws.onclose = e => {
-    console.log("CLOSE", e.code);
-};
+    ws.onmessage = (e) => {
+        try {
+            const json = JSON.parse(e.data);
+            if (!json.data || !Array.isArray(json.data)) return;
 
+            json.data.forEach(asset => {
+                if (asset.symbol) {
+                    precios[asset.symbol.toLowerCase()] = {
+                        ...asset,
+                        updatedAt: Date.now()
+                    };
+                }
+            });
+
+            document.getElementById("simbolos").textContent =
+                "Símbolos acumulados: " + Object.keys(precios).length;
+
+        } catch (err) {
+            console.log("Error parseando:", err.message);
+        }
+    };
+
+    ws.onerror = () => {
+        document.getElementById("estado").textContent = "❌ Error de conexión";
+    };
+
+    ws.onclose = (e) => {
+        document.getElementById("estado").textContent = "🔄 Reconectando...";
+        setTimeout(conectarWS, 5000);
+    };
+}
+
+async function enviarAAppsScript() {
+    if (Object.keys(precios).length === 0) return;
+
+    try {
+        // Nota: Apps Script Web Apps no manejan bien preflight CORS con
+        // Content-Type application/json en algunos casos, por eso se usa
+        // text/plain y se parsea igual como JSON del lado del script.
+        const res = await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ secreto: SECRETO, precios: precios })
+        });
+
+        document.getElementById("ultimo").textContent =
+            "Último envío: " + new Date().toLocaleTimeString();
+
+        console.log("✅ Enviado a Apps Script");
+
+    } catch (err) {
+        console.log("❌ Error enviando:", err.message);
+    }
+}
+
+conectarWS();
+setInterval(enviarAAppsScript, INTERVALO_ENVIO_MS);
 </script>
 
 </body>
