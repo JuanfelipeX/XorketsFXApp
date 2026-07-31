@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xorkets Bridge — Monitor</title>
+  <style>
+    :root {
+      --bg: #0a0d10;
+      --panel: #11151a;
+      --panel-border: #1e242b;
+      --text: #e7ebee;
+      --muted: #6b7680;
+      --dim: #3d444c;
+      --green: #21d67a;
+      --green-dim: #123825;
+      --red: #ff5c5c;
+      --red-dim: #3a1414;
+      --amber: #ffb020;
+      --amber-dim: #3a2c0c;
+      --mono: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ---------- TICKER ---------- */
+    .ticker-wrap {
+      background: #000;
+      border-bottom: 1px solid var(--panel-border);
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 9px 0;
+      flex-shrink: 0;
+    }
+
+    .ticker {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      animation: scroll 40s linear infinite;
+      padding-left: 100%;
+    }
+
+    .ticker span {
+      margin-right: 28px;
+      color: var(--muted);
+    }
+
+    .ticker span b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .ticker .up {
+      color: var(--green);
+    }
+
+    .ticker .down {
+      color: var(--red);
+    }
+
+    @keyframes scroll {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* ---------- LAYOUT ---------- */
+    .wrap {
+      max-width: 880px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+      flex: 1;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 28px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 650;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .beacon {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 7px 12px 7px 10px;
+      border-radius: 100px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--dim);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .dot.live {
+      background: var(--green);
+    }
+
+    .dot.live::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1px solid var(--green);
+      animation: pulse 1.8s ease-out infinite;
+    }
+
+    .dot.down {
+      background: var(--red);
+    }
+
+    .dot.pending {
+      background: var(--amber);
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.9;
+      }
+
+      100% {
+        transform: scale(1.9);
+        opacity: 0;
+      }
+    }
+
+    /* ---------- STAT CARDS ---------- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--panel-border);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: var(--panel);
+      padding: 16px 18px;
+    }
+
+    .stat .label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+
+    .stat .value {
+      font-family: var(--mono);
+      font-size: 19px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .stat .value.small {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* ---------- ACTIONS ---------- */
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      font-family: var(--sans);
+      font-size: 13.5px;
+      font-weight: 560;
+      border-radius: 8px;
+      padding: 11px 18px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: transform 0.06s ease, opacity 0.15s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #04180d;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.88;
+    }
+
+    .btn-primary:disabled {
+      background: var(--dim);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--panel-border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--muted);
+    }
+
+    /* ---------- LOG ---------- */
+    .log-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .log-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .log-head span {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #log {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      padding: 6px 16px;
+      border-bottom: 1px solid #14181d;
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .row .t {
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    .row .m {
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .row.ok .m {
+      color: var(--text);
+    }
+
+    .row.ok .tag {
+      color: var(--green);
+    }
+
+    .row.err .m {
+      color: #ff9d9d;
+    }
+
+    .row.err .tag {
+      color: var(--red);
+    }
+
+    .row.warn .tag {
+      color: var(--amber);
+    }
+
+    .tag {
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 20px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      text-align: center;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--panel-border);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker">
+      <span>cargando cotizaciones...</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <header>
+      <div>
+        <p class="eyebrow">Monitor de enlace</p>
+        <h1>Xorkets Bridge</h1>
+      </div>
+      <div class="beacon">
+        <span class="dot pending" id="dot"></span>
+        <span id="estadoTexto">Conectando…</span>
+      </div>
+    </header>
+
+    <div class="stats">
+      <div class="stat">
+        <p class="label">Símbolos</p>
+        <p class="value" id="statSimbolos">—</p>
+      </div>
+      <div class="stat">
+        <p class="label">Último envío</p>
+        <p class="value small" id="statUltimo">nunca</p>
+      </div>
+      <div class="stat">
+        <p class="label">Próximo envío</p>
+        <p class="value" id="statCountdown">—</p>
+      </div>
+      <div class="stat">
+        <p class="label">Envíos totales</p>
+        <p class="value" id="statTotal">0</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="btnEnviar">Enviar ahora</button>
+      <button class="btn-ghost" id="btnLimpiar">Limpiar log</button>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-head">
+        <span>Actividad</span>
+        <span id="logCount">0 eventos</span>
+      </div>
+      <div id="log"></div>
+    </div>
+
+    <footer>xorketsfx → apps script · esta pestaña debe permanecer abierta</footer>
+  </div>
+
+  <script>
+    // ==================== CONFIGURA ESTO ====================
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/TU_ID_AQUI/exec";
+    const SECRETO = "cambia-esto-por-algo-largo-y-random-123";
+    const INTERVALO_ENVIO_MS = 15000;
+    // ==========================================================
+
+    const WS_URL = "wss://app.xorketsfx.com/api/websocket/1/all";
+
+    let precios = {};
+    let ws = null;
+    let totalEnvios = 0;
+    let countdownRestante = INTERVALO_ENVIO_MS / 1000;
+    let logEventos = 0;
+
+    const $ = (id) => document.getElementById(id);
+
+    function agregarLog(tipo, texto) {
+      logEventos++;
+      $("logCount").textContent = logEventos + " eventos";
+
+      const hora = new Date().toLocaleTimeString();
+      const tag = { ok: "OK", err: "ERROR", warn: "AVISO", info: "INFO" }[tipo] || "INFO";
+
+      const row = document.createElement("div");
+      row.className = "row " + tipo;
+      row.innerHTML =
+        '<span class="t">' + hora + '</span>' +
+        '<span class="tag">' + tag + '</span>' +
+        '<span class="m">' + texto + '</span>';
+
+      const log = $("log");
+      log.prepend(row);
+      while (log.children.length > 80) log.removeChild(log.lastChild);
+    }
+
+    function setEstado(modo, texto) {
+      $("dot").className = "dot " + modo;
+      $("estadoTexto").textContent = texto;
+    }
+
+    function actualizarTicker() {
+      const claves = Object.keys(precios).slice(0, 25);
+      if (claves.length === 0) return;
+
+      const html = claves.map(k => {
+        const p = precios[k];
+        const dir = (p.changeRatio ?? 0) >= 0 ? "up" : "down";
+        const flecha = dir === "up" ? "▲" : "▼";
+        return '<span><b>' + p.symbol.toUpperCase() + '</b> ' +
+          p.close + ' <span class="' + dir + '">' + flecha + ' ' + p.changeRatio + '%</span></span>';
+      }).join("");
+
+      $("ticker").innerHTML = html + html; // duplicado para loop continuo
+    }
+
+    // ---------------- WebSocket ----------------
+    function conectarWS() {
+      ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        setEstado("live", "Conectado a Xorkets");
+        agregarLog("ok", "WebSocket conectado");
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const json = JSON.parse(e.data);
+          if (!json.data || !Array.isArray(json.data)) return;
+
+          json.data.forEach(asset => {
+            if (asset.symbol) {
+              precios[asset.symbol.toLowerCase()] = { ...asset, updatedAt: Date.now() };
+            }
+          });
+
+          $("statSimbolos").textContent = Object.keys(precios).length;
+          actualizarTicker();
+        } catch (err) {
+          agregarLog("err", "No se pudo leer un mensaje: " + err.message);
+        }
+      };
+
+      ws.onerror = () => {
+        setEstado("down", "Error de conexión");
+        agregarLog("err", "Error en el WebSocket");
+      };
+
+      ws.onclose = (e) => {
+        setEstado("down", "Desconectado — reintentando");
+        agregarLog("warn", "WebSocket cerrado (código " + e.code + "), reconectando en 5s");
+        setTimeout(conectarWS, 5000);
+      };
+    }
+
+    // ---------------- Envío a Apps Script ----------------
+    async function enviarAAppsScript(manual) {
+      if (Object.keys(precios).length === 0) {
+        agregarLog("warn", "Sin datos todavía, no se envía");
+        return;
+      }
+
+      $("btnEnviar").disabled = true;
+
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ secreto: SECRETO, precios: precios })
+        });
+
+        totalEnvios++;
+        $("statTotal").textContent = totalEnvios;
+        $("statUltimo").textContent = new Date().toLocaleTimeString();
+
+        agregarLog("ok", (manual ? "Envío manual" : "Envío automático") +
+          " completado — " + Object.keys(precios).length + " símbolos");
+
+      } catch (err) {
+        agregarLog("err", "Falló el envío: " + err.message);
+      } finally {
+        $("btnEnviar").disabled = false;
+      }
+    }
+
+    // ---------------- Contador regresivo ----------------
+    setInterval(() => {
+      countdownRestante--;
+      if (countdownRestante <= 0) {
+        countdownRestante = INTERVALO_ENVIO_MS / 1000;
+        enviarAAppsScript(false);
+      }
+      $("statCountdown").textContent = countdownRestante + "s";
+    }, 1000);
+
+    $("btnEnviar").addEventListener("click", () => enviarAAppsScript(true));
+    $("btnLimpiar").addEventListener("click", () => {
+      $("log").innerHTML = "";
+      logEventos = 0;
+      $("logCount").textContent = "0 eventos";
+    });
+
+    agregarLog("info", "Panel iniciado, abriendo conexión…");
+    conectarWS();
+  </script>
+
+</body>
+
+</html>
