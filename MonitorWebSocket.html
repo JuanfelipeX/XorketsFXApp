@@ -232,6 +232,15 @@
     .btn-ghost { background: transparent; border-color: var(--panel-border); color: var(--text); }
     .btn-ghost:hover { border-color: var(--muted); }
 
+    .btn-danger { background: var(--red); color: #2a0a0a; }
+    .btn-danger:hover { opacity: 0.88; }
+    .btn-danger:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; }
+
+    .btn-warn { background: var(--amber); color: #2a1c02; }
+    .btn-warn:hover { opacity: 0.88; }
+
+    .dot.off { background: var(--dim); }
+
     .log-panel {
       background: var(--panel);
       border: 1px solid var(--panel-border);
@@ -376,6 +385,8 @@
     <div class="actions">
       <button class="btn-primary" id="btnEnviar">Enviar ahora</button>
       <button class="btn-ghost" id="btnLimpiar">Limpiar log</button>
+      <button class="btn-warn" id="btnReiniciar">Reiniciar servicio</button>
+      <button class="btn-danger" id="btnDetener">Detener servicio</button>
     </div>
 
     <div class="log-panel">
@@ -405,6 +416,8 @@
     let logEventos = 0;
     let simboloActivo = null;
     let selectPoblado = false; // para no repintar el <select> y perder la selección del usuario
+    let servicioActivo = true; // controla si el WS debe reconectarse y si se envía automáticamente
+    let suprimirReconexion = false; // evita doble reconexión cuando el cierre fue manual (botón Reiniciar)
 
     const $ = (id) => document.getElementById(id);
 
@@ -556,6 +569,14 @@
       };
 
       ws.onclose = (e) => {
+        if (!servicioActivo) {
+          setEstado("off", "Detenido");
+          return;
+        }
+        if (suprimirReconexion) {
+          suprimirReconexion = false;
+          return; // el reinicio manual ya abre una conexión nueva por su cuenta
+        }
         setEstado("down", "Desconectado — reintentando");
         agregarLog("warn", "WebSocket cerrado (código " + e.code + "), reconectando en 5s");
         setTimeout(conectarWS, 5000);
@@ -564,6 +585,11 @@
 
     // ---------------- Envío a Apps Script ----------------
     async function enviarAAppsScript(manual) {
+      if (!servicioActivo) {
+        agregarLog("warn", "Servicio detenido, no se envía");
+        return;
+      }
+
       if (Object.keys(precios).length === 0) {
         agregarLog("warn", "Sin datos todavía, no se envía");
         return;
@@ -599,6 +625,10 @@
     }
 
     setInterval(() => {
+      if (!servicioActivo) {
+        $("statCountdown").textContent = "—";
+        return;
+      }
       countdownRestante--;
       if (countdownRestante <= 0) {
         countdownRestante = INTERVALO_ENVIO_MS / 1000;
@@ -612,6 +642,35 @@
       $("log").innerHTML = "";
       logEventos = 0;
       $("logCount").textContent = "0 eventos";
+    });
+
+    $("btnDetener").addEventListener("click", () => {
+      servicioActivo = false;
+      if (ws) ws.close();
+
+      $("btnEnviar").disabled = true;
+      $("btnDetener").disabled = true;
+
+      setEstado("off", "Detenido");
+      agregarLog("warn", "Servicio detenido manualmente por el usuario");
+    });
+
+    $("btnReiniciar").addEventListener("click", () => {
+      agregarLog("info", "Reiniciando servicio…");
+
+      servicioActivo = true;
+      countdownRestante = INTERVALO_ENVIO_MS / 1000;
+
+      $("btnEnviar").disabled = false;
+      $("btnDetener").disabled = false;
+
+      if (ws) {
+        suprimirReconexion = true;
+        try { ws.close(); } catch (err) {}
+      }
+
+      setEstado("pending", "Reconectando…");
+      conectarWS();
     });
 
     agregarLog("info", "Panel iniciado, abriendo conexión…");
