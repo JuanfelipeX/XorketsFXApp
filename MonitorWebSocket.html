@@ -158,7 +158,7 @@
 
     .search-row { display: flex; gap: 8px; }
 
-    .search-row input {
+    .search-row select {
       flex: 1;
       background: var(--bg);
       border: 1px solid var(--panel-border);
@@ -167,10 +167,15 @@
       font-family: var(--mono);
       font-size: 14px;
       padding: 10px 12px;
-      text-transform: lowercase;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0L5 6L10 0Z' fill='%236b7680'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
     }
 
-    .search-row input:focus { outline: none; border-color: var(--green); }
+    .search-row select:focus { outline: none; border-color: var(--green); }
 
     .search-row button {
       background: var(--panel-border);
@@ -246,11 +251,16 @@
 
     #log {
       font-family: var(--mono); font-size: 12px; line-height: 1.6;
-      max-height: 320px; overflow-y: auto; padding: 4px 0;
+      max-height: 400px; overflow-y: auto; padding: 4px 0;
     }
 
-    .row { display: flex; gap: 10px; padding: 6px 16px; border-bottom: 1px solid #14181d; }
-    .row:last-child { border-bottom: none; }
+    .row-wrap { border-bottom: 1px solid #14181d; }
+    .row-wrap:last-child { border-bottom: none; }
+
+    .row { display: flex; gap: 10px; padding: 6px 16px; }
+    .row-wrap.expandible .row { cursor: pointer; }
+    .row-wrap.expandible .row:hover { background: #161b21; }
+
     .row .t { color: var(--dim); flex-shrink: 0; }
     .row .m { color: var(--muted); word-break: break-word; }
     .row.ok .m { color: var(--text); }
@@ -259,6 +269,31 @@
     .row.err .tag { color: var(--red); }
     .row.warn .tag { color: var(--amber); }
     .tag { flex-shrink: 0; font-weight: 600; }
+    .chev { color: var(--dim); margin-left: 4px; display: inline-block; transition: transform 0.15s ease; }
+    .row-wrap.open .chev { transform: rotate(180deg); }
+
+    .row-detail {
+      display: none;
+      padding: 4px 16px 14px 40px;
+    }
+    .row-wrap.open .row-detail { display: block; }
+
+    .row-detail-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .rd-chip {
+      background: var(--bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .rd-chip b { color: var(--text); font-weight: 500; margin-left: 5px; }
 
     footer {
       margin-top: 20px; font-family: var(--mono); font-size: 11px;
@@ -317,7 +352,9 @@
     <div class="search-panel">
       <p class="label">Buscar símbolo</p>
       <div class="search-row">
-        <input type="text" id="searchInput" placeholder="ej: us30, eurusd, nas100..." autocomplete="off">
+        <select id="searchSelect">
+          <option value="">Selecciona un símbolo...</option>
+        </select>
         <button id="btnBuscar">Buscar</button>
       </div>
 
@@ -343,7 +380,7 @@
 
     <div class="log-panel">
       <div class="log-head">
-        <span>Actividad</span>
+        <span>Actividad — clic en un envío para ver el detalle</span>
         <span id="logCount">0 eventos</span>
       </div>
       <div id="log"></div>
@@ -367,27 +404,45 @@
     let countdownRestante = INTERVALO_ENVIO_MS / 1000;
     let logEventos = 0;
     let simboloActivo = null;
+    let selectPoblado = false; // para no repintar el <select> y perder la selección del usuario
 
     const $ = (id) => document.getElementById(id);
 
-    function agregarLog(tipo, texto) {
+    // ---------------- Log con detalle desplegable ----------------
+    function agregarLog(tipo, texto, detalle) {
       logEventos++;
       $("logCount").textContent = logEventos + " eventos";
 
       const hora = new Date().toLocaleTimeString();
       const tag = { ok: "OK", err: "ERROR", warn: "AVISO", info: "INFO" }[tipo] || "INFO";
 
-      const row = document.createElement("div");
-      row.className = "row " + tipo;
-      row.innerHTML =
+      const wrap = document.createElement("div");
+      wrap.className = "row-wrap" + (detalle ? " expandible" : "");
+
+      let detalleHTML = "";
+      if (detalle && detalle.length) {
+        detalleHTML = '<div class="row-detail"><div class="row-detail-grid">' +
+          detalle.map(d => '<span class="rd-chip">' + d.symbol.toUpperCase() + '<b>' + d.close + '</b></span>').join("") +
+          '</div></div>';
+      }
+
+      wrap.innerHTML =
+        '<div class="row ' + tipo + '">' +
         '<span class="t">' + hora + '</span>' +
         '<span class="tag">' + tag + '</span>' +
-        '<span class="m">' + texto + '</span>';
+        '<span class="m">' + texto + (detalle ? ' <span class="chev">▾</span>' : '') + '</span>' +
+        '</div>' + detalleHTML;
 
       const log = $("log");
-      log.prepend(row);
-      while (log.children.length > 80) log.removeChild(log.lastChild);
+      log.prepend(wrap);
+      while (log.children.length > 60) log.removeChild(log.lastChild);
     }
+
+    $("log").addEventListener("click", (e) => {
+      const wrap = e.target.closest(".row-wrap.expandible");
+      if (!wrap) return;
+      wrap.classList.toggle("open");
+    });
 
     function setEstado(modo, texto) {
       $("dot").className = "dot " + modo;
@@ -407,6 +462,19 @@
       }).join("");
 
       $("ticker").innerHTML = html + html;
+    }
+
+    // ---------------- Lista desplegable de símbolos ----------------
+    function poblarSelectSimbolos() {
+      if (selectPoblado) return; // los símbolos no cambian, solo se llena una vez
+      const claves = Object.keys(precios).sort();
+      if (claves.length === 0) return;
+
+      const select = $("searchSelect");
+      select.innerHTML = '<option value="">Selecciona un símbolo...</option>' +
+        claves.map(k => '<option value="' + k + '">' + precios[k].symbol.toUpperCase() + '</option>').join("");
+
+      selectPoblado = true;
     }
 
     function mostrarResultado(simbolo) {
@@ -445,16 +513,13 @@
     }
 
     function buscarSimbolo() {
-      const valor = $("searchInput").value.trim().toLowerCase();
+      const valor = $("searchSelect").value;
       if (!valor) return;
       simboloActivo = valor;
       mostrarResultado(valor);
     }
 
     $("btnBuscar").addEventListener("click", buscarSimbolo);
-    $("searchInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") buscarSimbolo();
-    });
 
     function conectarWS() {
       ws = new WebSocket(WS_URL);
@@ -477,6 +542,7 @@
 
           $("statSimbolos").textContent = Object.keys(precios).length;
           actualizarTicker();
+          poblarSelectSimbolos();
 
           if (simboloActivo) mostrarResultado(simboloActivo);
         } catch (err) {
@@ -496,6 +562,7 @@
       };
     }
 
+    // ---------------- Envío a Apps Script ----------------
     async function enviarAAppsScript(manual) {
       if (Object.keys(precios).length === 0) {
         agregarLog("warn", "Sin datos todavía, no se envía");
@@ -515,8 +582,14 @@
         $("statTotal").textContent = totalEnvios;
         $("statUltimo").textContent = new Date().toLocaleTimeString();
 
+        // Foto exacta de qué símbolos iban en ESTE envío, para el desplegable del log.
+        const detalle = Object.keys(precios).sort().map(k => ({
+          symbol: precios[k].symbol,
+          close: precios[k].close
+        }));
+
         agregarLog("ok", (manual ? "Envío manual" : "Envío automático") +
-          " completado — " + Object.keys(precios).length + " símbolos");
+          " completado — " + detalle.length + " símbolos", detalle);
 
       } catch (err) {
         agregarLog("err", "Falló el envío: " + err.message);
