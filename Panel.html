@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+
+  <style>
+
+    body{
+      font-family:Arial,sans-serif;
+      text-align:center;
+      margin-top:60px;
+    }
+
+    button{
+
+      width:250px;
+      height:70px;
+
+      font-size:22px;
+      font-weight:bold;
+
+      cursor:pointer;
+
+    }
+
+    #estado{
+
+      margin-top:20px;
+      font-size:18px;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h2>Xorkets FX</h2>
+
+  <button onclick="autenticar()">
+    🔐 Autenticar
+  </button>
+
+  <div id="estado"></div>
+
+  <script>
+
+    function autenticar(){
+
+      document.getElementById("estado").innerHTML =
+        "Autenticando...";
+
+      google.script.run
+
+        .withSuccessHandler(function(resultado){
+
+          document.getElementById("estado").innerHTML =
+            "✅ Finalizado";
+
+        })
+
+        .withFailureHandler(function(error){
+
+          document.getElementById("estado").innerHTML =
+            "❌ " + error.message;
+
+        })
+
+        .autenticarSeleccionados();
+
+    }
+
+  </script>
+
+</body>
+
+</html>
